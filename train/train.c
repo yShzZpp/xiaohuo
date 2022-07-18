@@ -19,6 +19,8 @@ struct train_info
 	char cEndTime[20];
 };
 
+int8_t write_train_info_to_file(struct train_info *pstTrain,uint32_t u32Size);
+int8_t read_train_info_from_file(struct train_info *pstTrain,uint32_t *pu32Size);
 /******************************************************
  * ****** Function		:   put_all_trains_info
  * ****** brief			:	打印保存的所有车票信息
@@ -91,7 +93,6 @@ int8_t find_train_by_name(struct train_info *pstTrain,uint32_t u32Size,char *pcT
 		//找到对应的名称
 		if(strcmp(pcTarget,pstTrain[i].cName) == 0)
 		{
-			put_one_train_info(pstTrain[i]);	
 			bFind = true;
 			s8Ret = i;
 		}
@@ -104,6 +105,33 @@ int8_t find_train_by_name(struct train_info *pstTrain,uint32_t u32Size,char *pcT
 
 	return s8Ret;
 	
+}
+
+/******************************************************
+ * ****** Function		:   
+ * ****** brief			:
+ * ****** param			:   NULL
+ * ****** return		:   NULL
+ * *******************************************************/
+int8_t del_train_info(struct train_info *pstTrain,uint32_t u32Size,int8_t s8Index)
+{
+		
+	if(u32Size == 0)
+	{
+		printf("	无信息,请先添加信息\n");
+		return -1;
+	}
+
+	if(pstTrain == NULL)
+	{
+		printf("	传入结构体指针错误\n");
+		return -1;
+	}
+
+	//清空对应的数据
+	memset(&pstTrain[s8Index],0,sizeof(struct train_info));
+
+	return 0;
 }
 
 /******************************************************
@@ -135,6 +163,12 @@ int8_t write_train_info_to_file(struct train_info *pstTrain,uint32_t u32Size)
 
 	for( uint32_t i = 0 ; i < u32Size ; i++ )
 	{
+		if(strlen(pstTrain[i].cFrom) == 0)
+		{
+			printf("%d是空的\n",i);
+			continue;
+		}
+
 		memset(buff,0,1024);
 		//按这种格式写入 方便后续读取 末尾的换行符用于标识一行数据的结尾
 		sprintf(buff,"from:%s;dest:%s;name:%s;ticket:%d;start:%s;end:%s\n",
@@ -169,16 +203,17 @@ int8_t read_train_info_from_file(struct train_info *pstTrain,uint32_t *pu32Size)
 		printf("文件为空 暂无保存的信息\n");
 		return 0;
 	}
-	
-	char cAllBuff[10240];
-	//读取文件 并且获取文件数据长度
-	int s32Len = fread(cAllBuff, 1,10240, fp);
+
+	memset(pstTrain,0,sizeof(struct train_info) * MAX_TRAIN_SIZE );
 	
 	//用于标识每一行的开头相对于数据的偏移量
 	int s32Index = 0;
+	uint32_t u32Size = 0;
 
-	uint32_t u32Size = *pu32Size;
-
+	char cAllBuff[10240];
+	//读取文件 并且获取文件数据长度
+	int s32Len = fread(cAllBuff, 1,10240, fp);
+	//当数组偏移量 小于整体数据长度 且 结构体数量 小于最大数量时
 	while(s32Index < s32Len && u32Size < MAX_TRAIN_SIZE)
 	{
 		//看不懂的话 这个man手册
@@ -208,7 +243,7 @@ int8_t read_train_info_from_file(struct train_info *pstTrain,uint32_t *pu32Size)
 
 int main(int argc,char *argv[])
 {
-	int choice;
+	int choice,ret;
 	uint32_t u32Size = 0;
 	struct train_info astTrain[MAX_TRAIN_SIZE];
 	memset(astTrain, 0, sizeof(astTrain));
@@ -223,7 +258,7 @@ int main(int argc,char *argv[])
 	while(1)
 	{
 		printf("\n+---------------------------------------------------------------------------------------------------+\n");
-		printf("欢迎\n1:查看全部\n2:通过名称查找车次\n3:添加车次信息\n0:退出\n");
+		printf("[%d]欢迎\n1:查看全部\n2:通过名称查找车次\n3:添加车次信息\n4:删除车次信息\n0:退出\n",u32Size);
 		scanf("%d",&choice);
 
 		switch(choice)
@@ -235,9 +270,17 @@ int main(int argc,char *argv[])
 
 			case 2:
 				printf("|---------------------------------------------------------------------------------------------------|\n");
-				printf("	请输入需要查找的名称\n");
+				printf("	请输入需要查找的车次名称\n");
 				scanf("%s",cName);
-				find_train_by_name(astTrain, u32Size,cName );
+				ret = find_train_by_name(astTrain, u32Size,cName );
+				if (ret != -1 && ret < MAX_TRAIN_SIZE)
+				{
+					put_one_train_info(astTrain[ret]);	
+				}
+				else
+				{
+					printf(" 查找不到[ %s ]有关数据\n",cName);
+				}
 				
 			break;
 
@@ -257,6 +300,33 @@ int main(int argc,char *argv[])
 				u32Size++;
 				write_train_info_to_file(astTrain, u32Size);
 					
+			break;
+
+			case 4:
+				
+				printf("|---------------------------------------------------------------------------------------------------|\n");
+				if(u32Size == 0)
+				{
+					printf("	无信息\n");
+					break;
+				}
+				
+				printf("	请输入需要删除的车次名称\n");
+				scanf("%s",cName);
+				ret = find_train_by_name(astTrain, u32Size,cName );
+				if (ret != -1 && ret < MAX_TRAIN_SIZE)
+				{
+					del_train_info(astTrain,u32Size,ret);	
+					write_train_info_to_file(astTrain,u32Size);
+					read_train_info_from_file(astTrain,&u32Size);
+				}
+				else
+				{
+					printf(" 查找不到[ %s ]有关数据\n",cName);
+				}
+
+				
+
 			break;
 
 			case 0:

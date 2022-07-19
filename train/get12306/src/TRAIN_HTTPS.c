@@ -1,22 +1,8 @@
-#include <stddef.h>
-#include <netinet/in.h>
-#include <openssl/evp.h>
-#include <stdint.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "../inc/TRAIN_HTTPS.h"
 #include <string.h>
-#include <stdio.h>
 
-
-#define MAX_DATA_SIZE (1024*1024)
 
 const char g_aQuary[2048] = 
-	"GET /otn/leftTicket/query?leftTicketDTO.train_date=2022-07-19&leftTicketDTO.from_station=SHH&leftTicketDTO.to_station=BJP&purpose_codes=ADULT HTTP/1.1\r\n"
 	"Host: kyfw.12306.cn\r\n"
 	"User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0\r\n"
 	"Accept: */*\r\n"
@@ -24,7 +10,8 @@ const char g_aQuary[2048] =
 	"If-Modified-Since: 0\r\n"
 	"Cache-Control: no-cache\r\n"
 	"X-Requested-With: XMLHttpRequest\r\n"
-	"Connection: keep-alive\r\n"
+	/** "Connection: keep-alive\r\n" */
+	"Connection: false\r\n"
 	"Referer: https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc\r\n"
 	"Cookie: _uab_collina=165784922762669618964436; JSESSIONID=352173FCC3BB17B983E22D16321260A0; guidesStatus=off; highContrastMode=defaltMode; cursorStatus=off; RAIL_EXPIRATION=1658165248978; RAIL_DEVICEID=OG6NvPpvhHKLZpFZ-0cQoVF_5jQn_uemA62Ub4xm91VoIZxJYdZHeVjP8pjTndmzrC-Sjk0mjqTtv1Qyp6wy1dLuwVayDUVw3vTkU8v6_NhJsCyl_quOneqgr_wEIvxYK3Ui9IxtDZYqPi5q3ACqWxE2JoO1U1HZ; _jc_save_fromStation=%%u4E0A%%u6D77%%2CSHH; _jc_save_toStation=%%u5317%u4EAC%%2CBJP; _jc_save_fromDate=2022-07-16; _jc_save_toDate=2022-07-15; _jc_save_wfdc_flag=dc; BIGipServerpassport=770179338.50215.0000; route=6f50b51faa11b987e576cdb301e545c4; BIGipServerotn=1960378634.50210.0000\r\n"
 	"Sec-Fetch-Dest: empty\r\n"
@@ -32,8 +19,22 @@ const char g_aQuary[2048] =
 	"Sec-Fetch-Site: same-origin\r\n"
 	"\r\n";
 
-int Get_Quest_Data(char *pcData)
+/******************************************************
+ * ****** Function		:   
+ * ****** brief			:
+ * ****** param			:   NULL
+ * ****** return		:   NULL
+ * *******************************************************/
+int TRAIN_HTTPS_Get_Quest_Data(char *pcData,char *pcTime,char *pcFrom,char *pcTo)
 {
+	
+    char *pcSendData = malloc(2048);
+	sprintf(pcSendData,
+	"GET /otn/leftTicket/query?leftTicketDTO.train_date=%s&leftTicketDTO.from_station=%s&leftTicketDTO.to_station=%s&purpose_codes=ADULT HTTP/1.1\r\n"
+	,pcTime,pcFrom,pcTo);
+	strcat(pcSendData, g_aQuary);
+
+
     ssize_t u32Size, u32DataLen;
     /* 构造查询包 */
 	/* openssl*/
@@ -60,14 +61,13 @@ int Get_Quest_Data(char *pcData)
 
     int fd;
     struct sockaddr_in stClientAddr;
-    const char *pcSendData;
 
     /* 创建一个套接字用来连接服务器 */
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0)
     {
 		perror("socket");
-		return 1;
+		return -1;
     }
 
 	struct hostent *pstHost = gethostbyname("kyfw.12306.cn");
@@ -86,7 +86,7 @@ int Get_Quest_Data(char *pcData)
     {
         perror("connect");
         close(fd);
-        return 1;
+        return -1;
     }
 
 	//建立SSL
@@ -109,14 +109,15 @@ int Get_Quest_Data(char *pcData)
 
 	
     /* 发送请求 */
-    pcSendData = g_aQuary;
-    u32DataLen = strlen(g_aQuary);
+    u32DataLen = strlen(pcSendData);
 	ret = SSL_write(ssl,pcSendData,u32DataLen);
 	if(ret == -1)
 	{
 		printf("SSL_write 错误\n");
 		return -1;
 	}
+	//释放空间
+	free(pcSendData);
 
     /* 获取响应 */
 	uint32_t u32Recv = 0;
@@ -130,7 +131,7 @@ int Get_Quest_Data(char *pcData)
 		return -1;
 	}
 	aTempBuff[ret -1 ] = 0;
-	printf("[%d]recv:\n%s",ret,aTempBuff);
+	/** printf("[%d]recv:\n%s",ret,aTempBuff); */
 	for( uint32_t i = 0 ; i < ret; i++ )
 	{
 		if( i > 4 && aTempBuff[i-4] == 't' && aTempBuff[i-3] == 'h' && aTempBuff[i-2] == ':' )
@@ -145,10 +146,10 @@ int Get_Quest_Data(char *pcData)
 
 	int time = 0;
 	ret = 0;
-	while(time < 10 && ret < u32Recv)
+	while(ret < u32Recv)
 	{
 		time++;
-		printf("can read %d\n",u32Recv - ret);
+		/** printf("can read %d\n",u32Recv - ret); */
 		ret += SSL_read(ssl,(pcData + ret),u32Recv - ret);
 		if(ret == -1)	
 		{
@@ -156,7 +157,7 @@ int Get_Quest_Data(char *pcData)
 			return -1;
 		}
 
-		printf("\ndata_%d[%d]:\n",time,ret);
+		/** printf("\ndata_%d[%d]:\n",time,ret); */
 
 		if(ret == u32Recv)
 		{
@@ -174,18 +175,8 @@ int Get_Quest_Data(char *pcData)
 	//释放SSL会话环境 
 	SSL_CTX_free(ctx);
 
+
     return 0;
-
 }
-
-
-int main(int argc, char **argv)
-{
-	char *pcData = malloc(MAX_DATA_SIZE);
-	Get_Quest_Data(pcData);
-	printf("%s\n",pcData);
-	free(pcData);
-}
-
 
 

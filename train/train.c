@@ -14,9 +14,11 @@ struct train_info
 	char cName[10];
 	char cFrom[16];
 	char cDest[16];
-	u_int32_t u32Tickets;
+	uint32_t u32Tickets;
+	uint32_t u32Buy;
 	char cStartTime[20];
 	char cEndTime[20];
+	
 };
 
 int8_t write_train_info_to_file(struct train_info *pstTrain,uint32_t u32Size);

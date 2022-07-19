@@ -97,7 +97,7 @@ int8_t STATION_MAP_Get_Name(char *pcCode,char ***pppcName,uint8_t *pu8Size)
 	//获取数量
 	u8Num = atoi(cBuff);
 	*pu8Size = u8Num;
-	printf("获取名称 有%d个数据\n",u8Num);
+	/** printf("获取名称 有%d个数据\n",u8Num); */
 	fclose(fp);
 
 	//数量为0
@@ -178,7 +178,7 @@ int8_t STATION_MAP_Get_Code(char ***pppcCode,char *pcName,uint8_t *pu8Size)
 	//获取数量
 	u8Num = atoi(cBuff);
 	*pu8Size = u8Num;
-	printf("获取代码 有%d个数据\n",u8Num);
+	/** printf("获取代码 有%d个数据\n",u8Num); */
 	fclose(fp);
 
 	//数量为0

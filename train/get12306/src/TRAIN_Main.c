@@ -18,13 +18,47 @@
 #include "../inc/TRAIN_Main.h"
 #include "../inc/TRAIN_Get_Station_Map.h"
 
+void MAIN_Print_Data(char *pcData)
+{
+	uint8_t u8Len = strlen(pcData);
+	/** printf("\n%d\n",u8Len); */
+	//1个字
+	if(u8Len == 3)
+	{
+		printf("  \033[032m%3s\033[0m  |",pcData);	
+	}
+	//2个字
+	else if(u8Len == 6)
+	{
+		printf("   \033[032m%6s\033[0m   |",pcData);	
+	}
+	//3个字
+	else if(u8Len == 9)
+	{
+		printf("   \033[032m%9s\033[0m |",pcData);	
+	}
+	//4个字
+	else if(u8Len == 12)
+	{
+		printf("  \033[032m%12s\033[0m|",pcData);	
+	}
+	else if(u8Len == 15)
+	{
+		printf("\033[032m%15s\033[0m|",pcData);	
+	}
+	else 
+	{
+		printf("%10s|","");
+	}
+}
+
 /******************************************************
  * ****** Function		:   
  * ****** brief			:
  * ****** param			:   NULL
  * ****** return		:   NULL
  * *******************************************************/
-int Parse_Train_data(char *pcData)
+int MAIN_Parse_Train_JSON(char *pcData)
 {
 	if(pcData == NULL)
 	{
@@ -56,6 +90,9 @@ int Parse_Train_data(char *pcData)
 	uint32_t u32ResultSize = cJSON_GetArraySize(cjResultArray);
 	char aName[10],aStart[30],aEnd[30],aFrom[30],aTo[30],aStartTime[20],aEndTime[20],aAllTime[20];
 	printf("有%d条车辆信息\n",u32ResultSize);
+	printf("+---------------------------------------------------------------------------------------+\n");
+	printf("|序号| 车次 |  始发站  |  终点站  | 查询起点 | 查询终点 | 发车时间 | 抵达时间 |   历时  |\n");
+	printf("|---------------------------------------------------------------------------------------|\n");
 	for(uint32_t i = 0 ; i < u32ResultSize ; i++)
 	{
 		cJSON *cjTemp = cJSON_GetArrayItem(cjResultArray, i);
@@ -74,13 +111,21 @@ int Parse_Train_data(char *pcData)
 			STATION_MAP_Get_1_NAME(aEnd);
 			STATION_MAP_Get_1_NAME(aFrom);
 			STATION_MAP_Get_1_NAME(aTo);
-			printf("[%d]车次:\033[32m%s\033[0m 始发站:\033[32m%s\033[0m 终点站:\033[32m%s\033[0m\n",i,aName,aStart,aEnd);
-			printf("   查询始发站:\033[32m%s\033[0m 查询终点站:\033[32m%s\033[0m\n",aFrom,aTo);
-			printf("   发车时间:\033[32m%s\033[0m 抵达时间:\033[32m%s\033[0m 总时间:\033[32m%s\033[0m\n",aStartTime,aEndTime,aAllTime);
+			printf("|%3d |\033[33m%5s\033[0m |",i,aName);
+			MAIN_Print_Data(aStart);
+			MAIN_Print_Data(aEnd);
+			MAIN_Print_Data(aFrom);
+			MAIN_Print_Data(aTo);
+			printf("   \033[34m%5s\033[0m  |   \033[36m%5s\033[0m  |  \033[32m%5s\033[0m  |\n",aStartTime,aEndTime,aAllTime);
+
+			/** printf("[%d]车次:\033[32m%s\033[0m 始发站:\033[32m%s\033[0m 终点站:\033[32m%s\033[0m\n",i,aName,aStart,aEnd); */
+			/** printf("   查询始发站:\033[32m%s\033[0m 查询终点站:\033[32m%s\033[0m\n",aFrom,aTo); */
+			/** printf("   发车时间:\033[32m%s\033[0m 抵达时间:\033[32m%s\033[0m 总时间:\033[32m%s\033[0m\n",aStartTime,aEndTime,aAllTime); */
 		}
 	}
 
 
+	printf("+---------------------------------------------------------------------------------------+\n");
 	cJSON_Delete(cjRoot);
 	return 0;
 
@@ -151,7 +196,7 @@ int main(int argc, char **argv)
 
 	for ( uint8_t i = 0 ; i < u8FromSize ; i++ )
 	{
-		printf("[%d]%s\n",i,*(ppcFromCode+i));
+		/** printf("[%d]%s\n",i,*(ppcFromCode+i)); */
 	}
 	
 
@@ -175,7 +220,7 @@ int main(int argc, char **argv)
 
 	for ( uint8_t i = 0 ; i < u8ToSize ; i++ )
 	{
-		printf("[%d]%s\n",i,*(ppcToCode+i));
+		/** printf("[%d]%s\n",i,*(ppcToCode+i)); */
 	}
 
 
@@ -187,7 +232,7 @@ int main(int argc, char **argv)
 	}
 	/** printf("%s\n",pcData); */
 
-	Parse_Train_data(pcData);
+	MAIN_Parse_Train_JSON(pcData);
 
 
 

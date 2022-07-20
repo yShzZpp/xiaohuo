@@ -96,7 +96,7 @@ int MAIN_Parse_Train_JSON(char *pcData)
 	char aTempBuff[MAX_DATA_SIZE];
 	//获取所需信息
 	uint32_t u32ResultSize = cJSON_GetArraySize(cjResultArray);
-	printf("有%d条车辆信息\n",u32ResultSize);
+	/** printf("有%d条车辆信息\n",u32ResultSize); */
 	printf("+---------------------------------------------------------------------------------------------------------------------------+\n");
 	printf("|序号| 车次 |  始发站  |  终点站  | 查询起点 | 查询终点 | 发车时间 | 抵达时间 |   历时  |              余票信息             |\n");
 	printf("|---------------------------------------------------------------------------------------------------------------------------|\n");
@@ -155,7 +155,9 @@ int MAIN_Parse_Train_JSON(char *pcData)
 				{
 					sscanf(&aTempBuff[u32Index],"%[^|]",aAllTime);
 				}
-				else if(j == 32 && aName[0] == 'G')		//商务特等
+
+				//高铁动车
+				else if(j == 32)		//商务特等
 				{
 					sscanf(&aTempBuff[u32Index],"%[^|]",aTeDeng);
 				}
@@ -168,16 +170,22 @@ int MAIN_Parse_Train_JSON(char *pcData)
 					sscanf(&aTempBuff[u32Index],"%[^|]",aErDeng);
 				}
 
+				//动车
+				else if(j == 33	)		//动卧
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aDongWo);
+				}
+
 				//绿皮
-				else if(j == 21 && aName[0] != 'G')		//高级软卧
+				else if(j == 21 )		//高级软卧
 				{
 					sscanf(&aTempBuff[u32Index],"%[^|]",aGaoRuanWo);
 				}
-				else if(j == 23 && aName[0] != 'G')		//一等软卧
+				else if(j == 23 )		//一等软卧
 				{
 					sscanf(&aTempBuff[u32Index],"%[^|]",aYiRuanWo);
 				}
-				else if(j == 26 && aName[0] != 'G')		//无座
+				else if(j == 26 )		//无座
 				{
 					sscanf(&aTempBuff[u32Index],"%[^|]",aWuZuo);
 				}
@@ -394,9 +402,6 @@ int MAIN_Parse_Train_JSON(char *pcData)
 			}
 			
 			printf("\n");
-
-			/** printf("特等:%3s|一等:%3s|二等:%3s|高级软卧:%3s|一等软卧:%3s|动卧:%3s|软座:%3s|硬座:%3s|无座:%3s|\n",aTeDeng,aYiDeng,aErDeng,aGaoRuanWo,aYiRuanWo,aDongWo,aRuanZuo,aYingZuo,aWuZuo); */
-
 
 			memset(aTempBuff,0,MAX_DATA_SIZE);
 		}

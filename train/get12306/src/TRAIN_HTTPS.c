@@ -81,7 +81,7 @@ int TRAIN_HTTPS_Get_Quest_Data(char *pcData,char *pcTime,char *pcFrom,char *pcTo
     stClientAddr.sin_family = AF_INET;
 	stClientAddr.sin_port = htons(443);
 	stClientAddr.sin_addr = *(struct in_addr *)pstHost->h_addr_list[0];
-	printf("ip:%s\n",inet_ntoa(stClientAddr.sin_addr));
+	/** printf("ip:%s\n",inet_ntoa(stClientAddr.sin_addr)); */
     if (connect(fd, (struct sockaddr *)&stClientAddr, sizeof(stClientAddr)))
     {
         perror("connect");
@@ -139,7 +139,7 @@ int TRAIN_HTTPS_Get_Quest_Data(char *pcData,char *pcTime,char *pcFrom,char *pcTo
 			sscanf(&aTempBuff[i],"%d",&u32Recv);	
 		}
 	}
-	printf("%d\n",u32Recv);
+	/** printf("%d\n",u32Recv); */
 
 	//清零
 	memset(pcData,0,MAX_DATA_SIZE);

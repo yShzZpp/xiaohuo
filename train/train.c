@@ -299,6 +299,19 @@ int main(int argc,char *argv[])
 				scanf("%s %s %s %d %s %s",astTrain[u32Size].cFrom,astTrain[u32Size].cDest,
 										astTrain[u32Size].cName,&astTrain[u32Size].u32Tickets,
 										astTrain[u32Size].cStartTime,astTrain[u32Size].cEndTime);
+				//要传入的数据长度是还未写入本次信息的数据，u32Size 先不自加 不然每次都会找到得到一样的数据 
+				//第三个参数传入本次输入的数据
+				ret = find_train_by_name(astTrain, u32Size, astTrain[u32Size].cName);
+				if(ret != -1 && ret < MAX_TRAIN_SIZE)
+				{
+					printf("重复\n");
+					//清除本次输入 第一个参数的意思是 传入这次输入的首地址
+					//第二个参数是将从这个地址开始 全部置0
+					//第三个参数是需要清空置0的长度 长度就是一个结构体的大小
+					memset(&astTrain[u32Size],0,sizeof(struct train_info));
+					continue;
+				}
+
 				u32Size++;
 				write_train_info_to_file(astTrain, u32Size);
 					

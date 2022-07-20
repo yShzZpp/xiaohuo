@@ -86,46 +86,324 @@ int MAIN_Parse_Train_JSON(char *pcData)
 		return -1;
 	}
 
+	//共有信息
+	char aName[10],aStart[30],aEnd[30],aFrom[30],aTo[30],aStartTime[20],aEndTime[20],aAllTime[20];
+	//高铁
+	char aYiDeng[10],aErDeng[10],aTeDeng[10],aDongWo[10];
+	//绿皮
+	char aGaoRuanWo[10],aYiRuanWo[10],aYingWo[10],aRuanZuo[10],aYingZuo[10],aWuZuo[10];
+
+	char aTempBuff[MAX_DATA_SIZE];
 	//获取所需信息
 	uint32_t u32ResultSize = cJSON_GetArraySize(cjResultArray);
-	char aName[10],aStart[30],aEnd[30],aFrom[30],aTo[30],aStartTime[20],aEndTime[20],aAllTime[20];
 	printf("有%d条车辆信息\n",u32ResultSize);
-	printf("+---------------------------------------------------------------------------------------+\n");
-	printf("|序号| 车次 |  始发站  |  终点站  | 查询起点 | 查询终点 | 发车时间 | 抵达时间 |   历时  |\n");
-	printf("|---------------------------------------------------------------------------------------|\n");
+	printf("+---------------------------------------------------------------------------------------------------------------------------+\n");
+	printf("|序号| 车次 |  始发站  |  终点站  | 查询起点 | 查询终点 | 发车时间 | 抵达时间 |   历时  |              余票信息             |\n");
+	printf("|---------------------------------------------------------------------------------------------------------------------------|\n");
 	for(uint32_t i = 0 ; i < u32ResultSize ; i++)
 	{
+
 		cJSON *cjTemp = cJSON_GetArrayItem(cjResultArray, i);
 		if(cjTemp != NULL && cjTemp->type == cJSON_String)
 		{
-			//							跳过	跳过		跳过	名称	
-			sscanf(cjTemp->valuestring,"%*[^|] | %*[^|] | %*[^|] | %9[^|] | "
-					//始发站	终点站  来站	去站
-					" %9[^|] | %9[^|] | %9[^|] | %9[^|] |"
-					//发车时间	抵达时间 总时间
-					" %9[^|] | %9[^|] | %9[^|] |"
-					,aName,aStart,aEnd,aFrom,aTo,
-					aStartTime,aEndTime,aAllTime);
 
-			STATION_MAP_Get_1_NAME(aStart);
-			STATION_MAP_Get_1_NAME(aEnd);
-			STATION_MAP_Get_1_NAME(aFrom);
-			STATION_MAP_Get_1_NAME(aTo);
+			//清空信息
+			bzero(aName,sizeof(aName));bzero(aStart,sizeof(aStart));bzero(aEnd,sizeof(aEnd));
+			bzero(aFrom,sizeof(aFrom));bzero(aTo,sizeof(aTo));bzero(aStartTime,sizeof(aStartTime));
+			bzero(aEndTime,sizeof(aEndTime)); bzero(aAllTime,sizeof(aAllTime));
+
+			bzero(aYiDeng,sizeof(aYiDeng));bzero(aErDeng,sizeof(aErDeng));bzero(aTeDeng,sizeof(aTeDeng)); bzero(aDongWo,sizeof(aDongWo));
+
+			bzero(aGaoRuanWo,sizeof(aGaoRuanWo));bzero(aYiRuanWo,sizeof(aYiRuanWo)); bzero(aYingWo,sizeof(aYingWo));
+			bzero(aRuanZuo,sizeof(aRuanZuo)); bzero(aYingZuo,sizeof(aYingZuo)); bzero(aWuZuo,sizeof(aWuZuo));
+
+			uint32_t u32Len = strlen(cjTemp->valuestring);
+			strcpy(aTempBuff,cjTemp->valuestring);
+
+			uint32_t u32Index = 0;
+			for(uint8_t j = 0 ; j < 48 ; j ++)
+			{
+				if(j == 3 )				//车次名称
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aName);
+				}
+				else if(j == 4)			//始发站
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aStart);
+				}
+				else if(j == 5)			//终点站
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aEnd);
+				}
+				else if(j == 6)			//来站
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aFrom);
+				}
+				else if(j == 7)			//去站
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aTo);
+				}
+				else if(j == 8)			//发车时间
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aStartTime);
+				}
+				else if(j == 9)			//抵达时间
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aEndTime);
+				}
+				else if(j == 10)		//历时
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aAllTime);
+				}
+				else if(j == 32 && aName[0] == 'G')		//商务特等
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aTeDeng);
+				}
+				else if(j == 31)		//一等
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aYiDeng);
+				}
+				else if(j == 30	)		//二等
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aErDeng);
+				}
+
+				//绿皮
+				else if(j == 21 && aName[0] != 'G')		//高级软卧
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aGaoRuanWo);
+				}
+				else if(j == 23 && aName[0] != 'G')		//一等软卧
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aYiRuanWo);
+				}
+				else if(j == 26 && aName[0] != 'G')		//无座
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aWuZuo);
+				}
+				else if(j == 24 )		//软坐
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aRuanZuo);
+				}
+				else if(j == 29 )		//硬坐
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aYingZuo);
+				}
+				else if(j == 28 )		//硬卧
+				{
+					sscanf(&aTempBuff[u32Index],"%[^|]",aYingWo);
+				}
+
+
+				while(u32Index < u32Len && aTempBuff[u32Index] != '|')u32Index++;
+				u32Index++;
+
+			}
+
+			STATION_MAP_Get_1_Name(aStart);
+			STATION_MAP_Get_1_Name(aEnd);
+			STATION_MAP_Get_1_Name(aFrom);
+			STATION_MAP_Get_1_Name(aTo);
 			printf("|%3d |\033[33m%5s\033[0m |",i,aName);
 			MAIN_Print_Data(aStart);
 			MAIN_Print_Data(aEnd);
 			MAIN_Print_Data(aFrom);
 			MAIN_Print_Data(aTo);
-			printf("   \033[34m%5s\033[0m  |   \033[36m%5s\033[0m  |  \033[32m%5s\033[0m  |\n",aStartTime,aEndTime,aAllTime);
+			
+			printf("   \033[34m%5s\033[0m  |   \033[36m%5s\033[0m  |  \033[32m%5s\033[0m  |",aStartTime,aEndTime,aAllTime);
 
-			/** printf("[%d]车次:\033[32m%s\033[0m 始发站:\033[32m%s\033[0m 终点站:\033[32m%s\033[0m\n",i,aName,aStart,aEnd); */
-			/** printf("   查询始发站:\033[32m%s\033[0m 查询终点站:\033[32m%s\033[0m\n",aFrom,aTo); */
-			/** printf("   发车时间:\033[32m%s\033[0m 抵达时间:\033[32m%s\033[0m 总时间:\033[32m%s\033[0m\n",aStartTime,aEndTime,aAllTime); */
+			//特等
+			if(strcmp(aTeDeng,"有") == 0 )
+			{
+				printf("特等:\033[32m%4s\033[0m|",aTeDeng);
+			}
+			else if(strcmp(aTeDeng,"无") == 0)
+			{
+				printf("特等:\033[31m%4s\033[0m|",aTeDeng);
+			}
+			else if(strlen(aTeDeng) == 0)
+			{
+				/** printf("特等: - |"); */
+			}
+			else
+			{
+				printf("特等:\033[33m%3s\033[0m|",aTeDeng);
+			}
+
+			//一等
+			if(strcmp(aYiDeng,"有") == 0 )
+			{
+				printf("一等:\033[32m%4s\033[0m|",aYiDeng);
+			}
+			else if(strcmp(aYiDeng,"无") == 0)
+			{
+				printf("一等:\033[31m%4s\033[0m|",aYiDeng);
+			}
+			else if(strlen(aYiDeng) == 0)
+			{
+				/** printf("一等: - |"); */
+			}
+			else
+			{
+				printf("一等:\033[33m%3s\033[0m|",aYiDeng);
+			}
+
+			//二等
+			if(strcmp(aErDeng,"有") == 0)
+			{
+				printf("二等:\033[32m%4s\033[0m|",aErDeng);
+			}
+			else if(strcmp(aErDeng,"无") == 0)
+			{
+				printf("二等:\033[31m%4s\033[0m|",aErDeng);
+			}
+			else if(strlen(aErDeng) == 0)
+			{
+				/** printf("二等: - |"); */
+			}
+			else
+			{
+				printf("二等:\033[33m%3s\033[0m|",aErDeng);
+			}
+
+
+			//高卧
+			if(strcmp(aGaoRuanWo ,"有") == 0)
+			{
+				printf("高卧:\033[32m%4s\033[0m|",aGaoRuanWo);
+			}
+			else if(strcmp(aGaoRuanWo ,"无") == 0)
+			{
+				printf("高卧:\033[31m%4s\033[0m|",aGaoRuanWo);
+			}
+			else if(strlen(aGaoRuanWo) == 0)
+			{
+				/** printf("高卧: - |"); */
+			}
+			else
+			{
+				printf("高卧:\033[33m%3s\033[0m|",aGaoRuanWo);
+			}
+
+			//一卧
+			if(strcmp(aYiRuanWo ,"有") == 0)
+			{
+				printf("一卧:\033[32m%4s\033[0m|",aYiRuanWo);
+			}
+			else if(strcmp(aYiRuanWo ,"无") == 0)
+			{
+				printf("一卧:\033[31m%4s\033[0m|",aYiRuanWo);
+			}
+			else if(strlen(aYiRuanWo) == 0)
+			{
+				/** printf("一卧: - |"); */
+			}
+			else
+			{
+				printf("一卧:\033[33m%3s\033[0m|",aYiRuanWo);
+			}
+
+			//动卧
+			if(strcmp(aDongWo ,"有") == 0)
+			{
+				printf("动卧:\033[32m%4s\033[0m|",aDongWo);
+			}
+			else if(strcmp(aDongWo ,"无") == 0)
+			{
+				printf("动卧:\033[31m%4s\033[0m|",aDongWo);
+			}
+			else if(strlen(aDongWo) == 0)
+			{
+				/** printf("动卧: - |"); */
+			}
+			else
+			{
+				printf("动卧:\033[33m%3s\033[0m|",aDongWo);
+			}
+
+			//硬卧
+			if(strcmp(aYingWo ,"有") == 0)
+			{
+				printf("硬卧:\033[32m%4s\033[0m|",aYingWo);
+			}
+			else if(strcmp(aYingWo ,"无") == 0)
+			{
+				printf("硬卧:\033[31m%4s\033[0m|",aYingWo);
+			}
+			else if(strlen(aYingWo) == 0)
+			{
+				/** printf("硬卧: - |"); */
+			}
+			else
+			{
+				printf("硬卧:\033[33m%3s\033[0m|",aYingWo);
+			}
+
+			//软座
+			if(strcmp(aRuanZuo ,"有") == 0)
+			{
+				printf("软座:\033[32m%4s\033[0m|",aRuanZuo);
+			}
+			else if(strcmp(aRuanZuo ,"无") == 0)
+			{
+				printf("软座:\033[31m%4s\033[0m|",aRuanZuo);
+			}
+			else if(strlen(aRuanZuo) == 0)
+			{
+				/** printf("软座: - |"); */
+			}
+			else
+			{
+				printf("软座:\033[33m%3s\033[0m|",aRuanZuo);
+			}
+
+			//硬座
+			if(strcmp(aYingZuo ,"有") == 0)
+			{
+				printf("硬座:\033[32m%4s\033[0m|",aYingZuo);
+			}
+			else if(strcmp(aYingZuo ,"无") == 0)
+			{
+				printf("硬座:\033[31m%4s\033[0m|",aYingZuo);
+			}
+			else if(strlen(aYingZuo) == 0)
+			{
+				/** printf("硬座: - |"); */
+			}
+			else
+			{
+				printf("硬座:\033[33m%3s\033[0m|",aYingZuo);
+			}
+
+			//无座
+			if(strcmp(aWuZuo ,"有") == 0)
+			{
+				printf("无座:\033[32m%4s\033[0m|",aWuZuo);
+			}
+			else if(strcmp(aWuZuo ,"无") == 0)
+			{
+				printf("无座:\033[31m%4s\033[0m|",aWuZuo);
+			}
+			else if(strlen(aWuZuo) == 0)
+			{
+				/** printf("无座: - |"); */
+			}
+			else
+			{
+				printf("无座:\033[33m%3s\033[0m|",aWuZuo);
+			}
+			
+			printf("\n");
+
+			/** printf("特等:%3s|一等:%3s|二等:%3s|高级软卧:%3s|一等软卧:%3s|动卧:%3s|软座:%3s|硬座:%3s|无座:%3s|\n",aTeDeng,aYiDeng,aErDeng,aGaoRuanWo,aYiRuanWo,aDongWo,aRuanZuo,aYingZuo,aWuZuo); */
+
+
+			memset(aTempBuff,0,MAX_DATA_SIZE);
 		}
 	}
 
 
-	printf("+---------------------------------------------------------------------------------------+\n");
+	printf("+---------------------------------------------------------------------------------------------------------------------------+\n");
 	cJSON_Delete(cjRoot);
 	return 0;
 
@@ -177,55 +455,62 @@ int main(int argc, char **argv)
 	sprintf(aDay,"%d-%02d-%02d",stTime->tm_year+1900,s32Mon,s32Day);
 
 	//始发站
-	uint8_t u8FromSize = 0;
+	/** uint8_t u8FromSize = 0; */
+	char aFromCode[10];
+	strcpy(aFromCode,argv[2]);
 
-	char **ppcFromCode = NULL;
+
+	/** char **ppcFromCode = NULL; */
 	//查找车站表
-	int ret = STATION_MAP_Get_Code(&ppcFromCode, argv[2], &u8FromSize);
+	/** int ret = STATION_MAP_Get_Code(&ppcFromCode, argv[2], &u8FromSize); */
+	int ret = STATION_MAP_Get_1_Code(aFromCode);
 	if(ret != 0)
 	{
 		printf("\033[31m程序出错\033[0m\n");
 		return 0;
 	}
 
-	if(u8FromSize == 0)
-	{
-		printf("\033[31m查找不到始发站%s的车站信息\033[0m\n",argv[2]);
-		return 0;
-	}
+	/** if(u8FromSize == 0) */
+	/** { */
+	/**     printf("\033[31m查找不到始发站%s的车站信息\033[0m\n",argv[2]); */
+	/**     return 0; */
+	/** } */
 
-	for ( uint8_t i = 0 ; i < u8FromSize ; i++ )
-	{
+	/** for ( uint8_t i = 0 ; i < u8FromSize ; i++ ) */
+	/** { */
 		/** printf("[%d]%s\n",i,*(ppcFromCode+i)); */
-	}
+	/** } */
 	
 
 	//终点站
-	uint8_t u8ToSize = 0;
-
-	char **ppcToCode = NULL;
+	/** uint8_t u8ToSize = 0; */
+	char aToCode[10];
+	strcpy(aToCode,argv[3]);
+	/** char **ppcToCode = NULL; */
 	//查找车站表
-	ret = STATION_MAP_Get_Code(&ppcToCode, argv[3], &u8ToSize);
+	/** ret = STATION_MAP_Get_Code(&ppcToCode, argv[3], &u8ToSize); */
+	ret = STATION_MAP_Get_1_Code(aToCode);
 	if(ret != 0)
 	{
 		printf("\033[31m程序出错\033[0m\n");
 		return 0;
 	}
 
-	if(u8ToSize == 0)
-	{
-		printf("\033[31m查找不到终点站%s的车站信息\033[0m\n",argv[3]);
-		return 0;
-	}
+	/** if(u8ToSize == 0) */
+	/** { */
+	/**     printf("\033[31m查找不到终点站%s的车站信息\033[0m\n",argv[3]); */
+	/**     return 0; */
+	/** } */
 
-	for ( uint8_t i = 0 ; i < u8ToSize ; i++ )
-	{
+	/** for ( uint8_t i = 0 ; i < u8ToSize ; i++ ) */
+	/** { */
 		/** printf("[%d]%s\n",i,*(ppcToCode+i)); */
-	}
+	/** } */
 
 
 	char *pcData = malloc(MAX_DATA_SIZE);
-	ret = TRAIN_HTTPS_Get_Quest_Data(pcData,aDay,ppcFromCode[0],ppcToCode[0]);
+	/** ret = TRAIN_HTTPS_Get_Quest_Data(pcData,aDay,ppcFromCode[0],ppcToCode[0]); */
+	ret = TRAIN_HTTPS_Get_Quest_Data(pcData,aDay,aFromCode,aToCode);
 	if(ret != 0)
 	{
 		printf("\033[31m获取到12306过程出错\033[0m\n");
@@ -237,17 +522,17 @@ int main(int argc, char **argv)
 
 
 	/**** 释放空间 ****/
-	for ( uint8_t i = 0; i < u8FromSize ; i ++ )
-	{
-		free(*(ppcFromCode+i));
-	}
-	free(ppcFromCode);
+	/** for ( uint8_t i = 0; i < u8FromSize ; i ++ ) */
+	/** { */
+	/**     free(*(ppcFromCode+i)); */
+	/** } */
+	/** free(ppcFromCode); */
 
-	for ( uint8_t i = 0; i < u8ToSize ; i ++ )
-	{
-		free(*(ppcToCode+i));
-	}
-	free(ppcToCode);
+	/** for ( uint8_t i = 0; i < u8ToSize ; i ++ ) */
+	/** { */
+	/**     free(*(ppcToCode+i)); */
+	/** } */
+	/** free(ppcToCode); */
 	free(pcData);
 
 

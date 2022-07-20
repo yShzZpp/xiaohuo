@@ -25,7 +25,8 @@ typedef struct station_map_st
 
 /***********************************函数声明***********************************/
 
-int8_t STATION_MAP_Get_1_NAME(char *pcCode);
+int8_t STATION_MAP_Get_1_Name(char *pcCode);
+int8_t STATION_MAP_Get_1_Code(char *pcName);
 int8_t STATION_MAP_Get_Name(char *pcCode,char ***pppcName,uint8_t *pu8Size);
 int8_t STATION_MAP_Get_Code(char ***pppcCode,char *pcName,uint8_t *pu8Size);
 

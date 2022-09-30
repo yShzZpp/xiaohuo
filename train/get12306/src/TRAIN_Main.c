@@ -13,10 +13,10 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "../inc/TRAIN_Get_Station_Map.h"
-#include "../inc/TRAIN_HTTPS.h"
-#include "../inc/TRAIN_Main.h"
-#include "../inc/TRAIN_cJSON.h"
+#include "TRAIN_Get_Station_Map.h"
+#include "TRAIN_HTTPS.h"
+#include "TRAIN_Main.h"
+#include "TRAIN_cJSON.h"
 
 void MAIN_Print_Data(char *pcData)
 {
@@ -68,7 +68,8 @@ int MAIN_Parse_Train_JSON(char *pcData)
     cJSON *cjRoot = cJSON_Parse(pcData);
     if (cjRoot == NULL || cjRoot->type != cJSON_Object)
     {
-        printf("不是json obj\n");
+        printf("%s\n", pcData);
+        printf(" 不是json obj\n");
         return -1;
     }
 

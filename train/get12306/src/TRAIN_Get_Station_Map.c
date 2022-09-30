@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../inc/TRAIN_Get_Station_Map.h"
+#include "TRAIN_Get_Station_Map.h"
 
 /***********************************常量***********************************/
 #define STATION_MAP_PATH "get12306/12306StationMap"

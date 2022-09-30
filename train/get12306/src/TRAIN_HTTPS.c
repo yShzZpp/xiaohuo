@@ -29,7 +29,7 @@ int TRAIN_HTTPS_Get_Quest_Data(char *pcData, char *pcTime, char *pcFrom, char *p
 
     char *pcSendData = malloc(2048);
     sprintf(pcSendData,
-            "GET /otn/leftTicket/query?leftTicketDTO.train_date=%s&leftTicketDTO.from_station=%s&leftTicketDTO.to_station=%s&purpose_codes=ADULT HTTP/1.1\r\n", pcTime, pcFrom, pcTo);
+            "GET /otn/leftTicket/queryZ?leftTicketDTO.train_date=%s&leftTicketDTO.from_station=%s&leftTicketDTO.to_station=%s&purpose_codes=ADULT HTTP/1.1\r\n", pcTime, pcFrom, pcTo);
     strcat(pcSendData, g_aQuary);
 
     ssize_t u32Size, u32DataLen;
@@ -126,7 +126,7 @@ int TRAIN_HTTPS_Get_Quest_Data(char *pcData, char *pcTime, char *pcFrom, char *p
         return -1;
     }
     aTempBuff[ret - 1] = 0;
-    /** printf("[%d]recv:\n%s",ret,aTempBuff); */
+	/* printf("[%d]recv:\n%s",ret,aTempBuff); */
     for (uint32_t i = 0; i < ret; i++)
     {
         if (i > 4 && aTempBuff[i - 4] == 't' && aTempBuff[i - 3] == 'h' && aTempBuff[i - 2] == ':')
